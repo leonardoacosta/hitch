@@ -1,0 +1,14 @@
+id = "leonardoacosta.hitch"
+name = "Hitch"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Read-only, project-aware connection diagnostics and reconnect instructions for the Hitch editor extension."
+platforms = ["linux"]
+
+# The project comes from the focused pane's cwd (HERDR_ACTIVE_PANE_CWD) or an
+# explicit `--project <dir>` argument. Missing input is reported, nothing is mutated.
+[[actions]]
+id = "diagnose"
+title = "Hitch: diagnose connection for this project"
+description = "Report project, Herdr and session status with reconnect instructions. Read-only."
+command = ["node", "dist/companion.js"]
