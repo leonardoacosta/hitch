@@ -26,8 +26,8 @@ Failures show an error message; there is no fallback shell.
 - Only human-opened terminals; the Cursor Agent shell is not routed.
 - No shell integration: no cwd tracking or exit-status detection.
 - Busy-controller detection is not implemented (`herdr pane get` exposes no attach/controller field).
-- The Cursor Agent shell tool is not routed through Hitch; there is no shell-integration cwd or exit status.
 - Linux workspace host only; untrusted workspaces are refused.
+- Multi-root windows are unit-tested only; the folder picker has not been exercised by hand in Cursor.
 
 ## Companion (Herdr plugin)
 `herdr-plugin.toml` declares a read-only `diagnose` action (`node dist/companion.js`, build with `npm run build:companion`). It uses the focused pane cwd or `--project <dir>`.
