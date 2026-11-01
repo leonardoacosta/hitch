@@ -106,7 +106,7 @@ export function createBindingStore(dir: string, api: WorkspaceApi, opts: { lockW
         const idx = await load();
         if (await live(idx, root)) return { projectRoot: root, workspaceId: idx.bindings[root]! };
         if (idx.bindings[root])
-          throw new BindingStaleError(`Binding for ${root} points to ${idx.bindings[root]}, which is missing or from another herdr server instance. Run "Hitch: Rebind Project" or "Hitch: Adopt Existing Herdr Workspace".`);
+          throw new BindingStaleError(`Binding for ${root} points to ${idx.bindings[root]}, which is missing or from another herdr server instance. Run "Hitch: Rebind Project to New Herdr Workspace" or "Hitch: Adopt Existing Herdr Workspace".`);
         guardPending(idx, root);
         return create(idx, root);
       });
