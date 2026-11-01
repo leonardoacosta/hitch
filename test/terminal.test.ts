@@ -52,18 +52,10 @@ test("dispose is detach only and idempotent", async () => {
   assert.deepEqual(detached, [s.pane.paneId]); assert.equal(calls.length, 1);
 });
 
-test("busy terminal needs explicit consent, never takeover", async () => {
+test("busy terminal is refused when a busy lookup is supplied, never taken over", async () => {
   const { svc } = setup({ bound: true, busy: true });
   const s = await svc.open("/p");
   await assert.rejects(svc.attach("/p", s.pane.terminalId), BusyControllerError);
-  const r = await svc.attach("/p", s.pane.terminalId, { consentToTransfer: true });
-  assert.ok(!r.shellArgs.includes("--takeover"));
-});
-
-test("real herdr contention message is classified as busy", async () => {
-  const { isBusyAttachFailure } = await import("../src/terminal/service.ts");
-  assert.ok(isBusyAttachFailure("terminal term_x already has an attached client; retry with --takeover"));
-  assert.ok(!isBusyAttachFailure("terminal exited"));
 });
 
 test("takeover argv is refused and the created pane stays recoverable", async () => {

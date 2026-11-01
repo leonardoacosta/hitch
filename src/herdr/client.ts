@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import type { ExecResult, HerdrClient, PaneRef } from "../types.ts";
 
@@ -21,12 +22,15 @@ export interface HerdrOptions {
   bin?: string;
   exec?: Exec;
   env?: NodeJS.ProcessEnv;
+  stat?: (path: string) => Promise<{ ino: number; birthtimeMs: number }>;
 }
 
 /** Wraps the herdr CLI. Never starts a daemon or falls back to a local shell. */
 export type WorkspaceClient = HerdrClient & {
   createWorkspace(cwd: string, label: string): Promise<string>;
   workspaceExists(id: string): Promise<boolean>;
+  listWorkspaces(): Promise<{ workspaceId: string; label: string }[]>;
+  serverInstance(): Promise<string>;
 };
 
 export function createHerdrClient(opts: HerdrOptions = {}): WorkspaceClient {
@@ -50,6 +54,12 @@ export function createHerdrClient(opts: HerdrOptions = {}): WorkspaceClient {
     try { return JSON.parse(r.stdout).result; } catch { throw new HerdrError("herdr returned unparseable output"); }
   };
 
+  const listWorkspaces = async () => {
+    const list = json(await run(["workspace", "list"]))?.workspaces;
+    if (!Array.isArray(list)) throw new HerdrError("unexpected herdr workspace list output");
+    return list.filter((w: any) => typeof w?.workspace_id === "string").map((w: any) => ({ workspaceId: w.workspace_id as string, label: String(w.label ?? "") }));
+  };
+
   let checked: Promise<string> | undefined;
   return {
     async createWorkspace(cwd, label) {
@@ -59,9 +69,17 @@ export function createHerdrClient(opts: HerdrOptions = {}): WorkspaceClient {
       return id;
     },
     async workspaceExists(id) {
-      const list = json(await run(["workspace", "list"]))?.workspaces;
-      if (!Array.isArray(list)) throw new HerdrError("unexpected herdr workspace list output");
-      return list.some((w: { workspace_id?: string }) => w?.workspace_id === id);
+      return (await listWorkspaces()).some((w) => w.workspaceId === id);
+    },
+    listWorkspaces,
+    /** Herdr has no server id; the socket is recreated on each server start, so path+inode+birth time identifies one run. */
+    async serverInstance() {
+      const r = await run(["status", "server", "--json"]);
+      let socket: unknown;
+      try { socket = JSON.parse(r.stdout).socket; } catch { throw new HerdrError("herdr returned unparseable output"); }
+      if (typeof socket !== "string") throw new HerdrError("herdr status did not report a server socket");
+      const s = await (opts.stat ?? stat)(socket).catch(() => { throw new HerdrError(`herdr server socket ${socket} is not readable. Is the herdr server running?`); });
+      return `${socket}:${s.ino}:${s.birthtimeMs}`;
     },
     async version() {
       const out = (await run(["--version"])).stdout.trim();

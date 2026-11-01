@@ -26,6 +26,7 @@ test("resolveProfileOptions applies mapSettings env/cwd/diagnostics", async () =
   const dir = mkdtempSync(join(tmpdir(), "h-"));
   const exec = async (_b: string, a: string[]) => ({ code: 0, stderr: "", stdout:
     a[0] === "--version" ? "herdr 0.9.5\n" :
+    a[0] === "status" ? JSON.stringify({ socket: dir }) :
     a[0] === "workspace" && a[1] === "create" ? JSON.stringify({ result: { workspace: { workspace_id: "w1" } } }) :
     a[0] === "workspace" ? JSON.stringify({ result: { workspaces: [{ workspace_id: "w1" }] } }) :
     JSON.stringify({ result: { root_pane: { pane_id: "w1:p1", terminal_id: "t1" } } }) });

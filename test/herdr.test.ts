@@ -51,3 +51,22 @@ test("real non-executable binary maps to permission error", async () => {
   const c = createHerdrClient({ bin: "/etc/shadow", env: {} });
   await assert.rejects(c.version(), /not executable|permission/);
 });
+
+test("listWorkspaces maps ids and labels, skips malformed entries", async () => {
+  const c = createHerdrClient({ bin: "/x/herdr", env: {}, exec: async () => ({ code: 0, stderr: "", stdout: JSON.stringify({ result: { workspaces: [{ workspace_id: "w1", label: "a" }, { label: "bad" }, { workspace_id: "w2" }] } }) }) });
+  assert.deepEqual(await c.listWorkspaces(), [{ workspaceId: "w1", label: "a" }, { workspaceId: "w2", label: "" }]);
+  assert.equal(await c.workspaceExists("w2"), true);
+  assert.equal(await c.workspaceExists("nope"), false);
+});
+
+test("serverInstance derives identity from the status socket, changing when the socket is recreated", async () => {
+  let ino = 1;
+  const c = createHerdrClient({ bin: "/x/herdr", env: {}, stat: async () => ({ ino, birthtimeMs: 5 }),
+    exec: async (_b, a) => { assert.deepEqual(a, ["status", "server", "--json"]); return { code: 0, stderr: "", stdout: JSON.stringify({ socket: "/s/herdr.sock" }) }; } });
+  const first = await c.serverInstance();
+  assert.equal(first, "/s/herdr.sock:1:5");
+  ino = 2;
+  assert.notEqual(await c.serverInstance(), first);
+  const bad = createHerdrClient({ bin: "/x/herdr", env: {}, exec: async () => ({ code: 0, stderr: "", stdout: "{}" }) });
+  await assert.rejects(bad.serverInstance(), /socket/);
+});

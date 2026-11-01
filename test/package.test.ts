@@ -8,6 +8,8 @@ test("untrusted workspaces unsupported", () => {
 });
 test("hitch.rebind contributed and activates", () => {
   assert.ok(p.contributes.commands.some((c: { command: string }) => c.command === "hitch.rebind"));
+  assert.ok(p.contributes.commands.some((c: { command: string }) => c.command === "hitch.adopt"));
+  assert.ok(p.activationEvents.includes("onCommand:hitch.adopt"));
   assert.ok(p.activationEvents.includes("onCommand:hitch.rebind"));
 });
 test("hitch.reattach contributed", () => {

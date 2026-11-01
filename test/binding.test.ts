@@ -91,3 +91,11 @@ test("explicit rebind and adopt; no cross-project adoption; non-git folders", as
   assert.equal((await s.adopt(b, "manual")).workspaceId, "manual");
   await assert.rejects(s.adopt(b, "gone"), /does not exist/);
 });
+
+test("bindings recorded before instance tracking stay usable", async () => {
+  const { base, a } = await setup(); const live = new Set<string>();
+  const st = path.join(base, "st");
+  const old = await createBindingStore(st, { async createWorkspace() { live.add("w1"); return "w1"; }, async workspaceExists(w: string) { return live.has(w); } }).bind(a);
+  const s = createBindingStore(st, inst({ v: "i1" }, live));
+  assert.equal((await s.get(a))?.workspaceId, old.workspaceId);
+});

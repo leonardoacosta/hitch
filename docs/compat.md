@@ -19,6 +19,9 @@ Native Split reuses the default profile. Opt in yourself in user settings:
 ```
 Rollback: remove that key. Hitch never edits defaults. Ordinary profiles stay available in the picker.
 
+## Cursor Remote (SSH)
+Hitch is a workspace extension (`extensionKind: ["workspace"]`). With Cursor on a Mac connected to a Linux host over Remote SSH, Hitch runs only in the remote extension host on that Linux machine and talks to that machine's Herdr. The Mac client never runs Hitch, never calls Herdr and only renders the terminal stream Cursor forwards. A local Mac window (no remote) runs Hitch on the Mac, where it looks for a Mac `herdr`. It cannot reach the remote Linux host's Herdr. Hitch does not check the OS; macOS hosts are untested.
+
 ## Trust
 Activation is `onTerminalProfile:hitch.herdr`. In an untrusted workspace Hitch refuses before any process or socket access (`assertTrusted`); no executable-path setting is contributed.
 

@@ -18,7 +18,7 @@ export function findHerdr(pathVar = process.env.PATH ?? "", exists: (p: string) 
 }
 
 export function workspaceApi(herdr: WorkspaceClient): WorkspaceApi {
-  return { createWorkspace: (cwd, label) => herdr.createWorkspace(cwd, label), workspaceExists: (id) => herdr.workspaceExists(id) };
+  return { createWorkspace: (cwd, label) => herdr.createWorkspace(cwd, label), workspaceExists: (id) => herdr.workspaceExists(id), serverInstance: () => herdr.serverInstance() };
 }
 
 export function buildService(storageDir: string, bin?: string, exec?: HerdrExec, env?: NodeJS.ProcessEnv) {
@@ -26,7 +26,7 @@ export function buildService(storageDir: string, bin?: string, exec?: HerdrExec,
   const herdr = createHerdrClient({ bin: b, exec, env });
   const store = createBindingStore(storageDir, workspaceApi(herdr));
   // isBusy intentionally unset: `herdr pane get` exposes no controller/attach field.
-  return Object.assign(createTerminalService({ herdr, store }), { rebind: (root: string) => store.rebind(root) });
+  return Object.assign(createTerminalService({ herdr, store }), { rebind: (root: string) => store.rebind(root), adopt: (root: string, id: string) => store.adopt(root, id), listWorkspaces: () => herdr.listWorkspaces() });
 }
 
 export interface ReattachItem { label: string; description: string; terminalId: string }

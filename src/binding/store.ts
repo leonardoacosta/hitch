@@ -74,7 +74,8 @@ export function createBindingStore(dir: string, api: WorkspaceApi, opts: { lockW
   const live = async (idx: Index, root: string) => {
     const id = idx.bindings[root];
     if (!id) return false;
-    if (api.serverInstance && idx.instances[root] !== (await api.serverInstance())) return false;
+    // Bindings recorded before instance tracking have no instance and are checked by workspace id only.
+    if (api.serverInstance && idx.instances[root] !== undefined && idx.instances[root] !== (await api.serverInstance())) return false;
     return api.workspaceExists(id);
   };
   const create = async (idx: Index, root: string): Promise<Binding> => {
@@ -89,7 +90,7 @@ export function createBindingStore(dir: string, api: WorkspaceApi, opts: { lockW
   };
   const guardPending = (idx: Index, root: string) => {
     if (idx.pending[root])
-      throw new BindingLockError(`A previous bind for ${root} was interrupted and may have created a workspace. Check herdr workspaces, adopt it explicitly, or remove the pending entry in ${indexFile}.`);
+      throw new BindingLockError(`A previous bind for ${root} was interrupted and may have created a workspace. Check herdr workspaces, run "Hitch: Adopt Existing Herdr Workspace", or remove the pending entry in ${indexFile}.`);
   };
 
   return {
@@ -105,7 +106,7 @@ export function createBindingStore(dir: string, api: WorkspaceApi, opts: { lockW
         const idx = await load();
         if (await live(idx, root)) return { projectRoot: root, workspaceId: idx.bindings[root]! };
         if (idx.bindings[root])
-          throw new BindingStaleError(`Binding for ${root} points to ${idx.bindings[root]}, which is missing or from another herdr server instance. Rebind or adopt explicitly.`);
+          throw new BindingStaleError(`Binding for ${root} points to ${idx.bindings[root]}, which is missing or from another herdr server instance. Run "Hitch: Rebind Project" or "Hitch: Adopt Existing Herdr Workspace".`);
         guardPending(idx, root);
         return create(idx, root);
       });

@@ -16,13 +16,10 @@ export interface TerminalSession {
 export interface TerminalServiceOptions {
   herdr: HerdrClient;
   store: BindingStore;
-  /** Optional busy-controller lookup (terminal id -> has another attached controller). */
+  /** Optional busy-controller lookup. Unset in production: herdr 0.9.5 exposes no controller field. */
   isBusy?: (pane: PaneRef) => Promise<boolean>;
   onDetach?: (pane: PaneRef) => void;
 }
-
-/** Herdr exposes no controller field; the only signal is the attach client's stderr (herdr 0.9.5). */
-export const isBusyAttachFailure = (output: string): boolean => /already has an attached client/i.test(output);
 
 const sessionFor = (o: TerminalServiceOptions, pane: PaneRef): TerminalSession => {
   const { shellPath, shellArgs } = o.herdr.attachArgv(pane);
@@ -72,12 +69,12 @@ export function createTerminalService(o: TerminalServiceOptions) {
     },
 
     /** Attach to an existing pane by stable terminal id; never creates a replacement. */
-    async attach(projectRoot: string, terminalId: string, opts: { consentToTransfer?: boolean } = {}): Promise<TerminalSession> {
+    async attach(projectRoot: string, terminalId: string): Promise<TerminalSession> {
       const b = await o.store.get(projectRoot);
       const pane = b && (await o.herdr.listPanes(b.workspaceId)).find((p) => p.terminalId === terminalId && p.workspaceId === b.workspaceId);
       if (!pane) throw new StalePaneError(`Terminal ${terminalId} no longer exists in this project's Herdr workspace. Pick another pane or start a new terminal; nothing was created.`);
-      if (o.isBusy && (await o.isBusy(pane)) && !opts.consentToTransfer)
-        throw new BusyControllerError(`Terminal ${terminalId} is controlled by another client. Detach it there, or confirm a retry here. Hitch never forces a takeover; no keys were replayed.`);
+      if (o.isBusy && (await o.isBusy(pane)))
+        throw new BusyControllerError(`Terminal ${terminalId} is controlled by another client. Detach it there and retry. Hitch never forces a takeover; no keys were replayed.`);
       return sessionFor(o, pane);
     },
   };

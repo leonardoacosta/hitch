@@ -11,13 +11,13 @@ Non-secret bindings live in `bindings.json` (written atomically via temp file an
 
 ## Recovery
 - Lock held: Hitch waits, then fails. It never deletes or takes over the lock. If no Hitch window is binding, verify, then remove `bindings.lock` manually.
-- Interrupted create (pending entry): a workspace may exist. Inspect herdr workspaces, then `adopt(root, workspaceId)` it or delete the pending entry from `bindings.json`.
+- Interrupted create (pending entry): a workspace may exist. Run **Hitch: Adopt Existing Herdr Workspace** and pick that workspace, or delete the pending entry from `bindings.json`.
 
 ## Rebind behavior
-A binding is used only if its workspace exists and the herdr server instance matches the one recorded. Otherwise `bind` fails with a stale error and `get` returns nothing. Matching labels or coincident IDs are never adopted automatically. Use `rebind(root)` to create a new workspace or `adopt(root, id)` for an existing one not bound to another project.
+A binding is used only if its workspace exists and the herdr server instance matches the one recorded. Otherwise `bind` fails with a stale error and `get` returns nothing. Matching labels or coincident IDs are never adopted automatically. Run **Hitch: Rebind Project to New Herdr Workspace** to create a new workspace, or **Hitch: Adopt Existing Herdr Workspace** to bind one that no other project uses. Both ask for confirmation and use the same folder selection as the terminal profile.
 
-## Server instance limitation
-`herdr status server --json` (0.9.5) and `herdr api snapshot` expose only version, protocol, socket and session; there is no instance id, start time or pid. Hitch therefore cannot detect a server restart that reuses workspace ids, and does not set `serverInstance`. A binding is validated only by workspace existence.
+## Server instance
+Herdr 0.9.5 exposes no server id. Hitch derives one from the socket reported by `herdr status server --json`: its path, inode and creation time. The server recreates the socket on every start, so a restart or a different session changes the id, and an old binding is reported stale instead of reusing a coincident workspace id. Bindings written before this check have no recorded id and are validated by workspace existence only until they are rebound or adopted.
 
 ## Stale lock
 The lock file holds the owner pid, written atomically (hard link of a temp file). If the holder pid is dead, Hitch reports an error naming the lock path and asks you to remove it manually. It never deletes or takes over a lock.

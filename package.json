@@ -26,7 +26,8 @@
   "activationEvents": [
     "onTerminalProfile:hitch.herdr",
     "onCommand:hitch.reattach",
-    "onCommand:hitch.rebind"
+    "onCommand:hitch.rebind",
+    "onCommand:hitch.adopt"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -37,7 +38,8 @@
   "contributes": {
     "commands": [
       { "command": "hitch.reattach", "title": "Hitch: Reattach to Herdr Pane" },
-      { "command": "hitch.rebind", "title": "Hitch: Rebind Project to New Herdr Workspace" }
+      { "command": "hitch.rebind", "title": "Hitch: Rebind Project to New Herdr Workspace" },
+      { "command": "hitch.adopt", "title": "Hitch: Adopt Existing Herdr Workspace" }
     ],
     "terminal": {
       "profiles": [
